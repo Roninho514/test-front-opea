@@ -1,15 +1,27 @@
 <template>
     <div class="box-filter">
         <div class="filter">
-            <input type="text" placeholder="Buscar empresa...">
-            <button><img src="../../public/img/search.png" alt="Filtrar"></button>
+            <input type="text" placeholder="Buscar empresa..." v-model="inputFilter" @keyup.enter="filtred">
+            <button @click="filtred"><img src="../../public/img/search.png" alt="Filtrar"></button>
         </div>
     </div>
 </template>
 
 <script>
 export default {
-    name: "FilterComponent"
+    name: "FilterComponent",
+    data() {
+        return {
+            inputFilter : "",
+        }
+    },
+    emits: ['filterCompany'],
+    methods: {
+        filtred(){
+            const filter = this.inputFilter.toString().trim().replace(/\s+/g, ' ');
+            this.$emit('filterCompany', filter);
+        }
+    }
 }
 </script>
 
@@ -44,7 +56,6 @@ export default {
             button {
                 background-color: transparent;
                 border: none;
-                cursor: pointer;
                 margin-left: 0.3rem;
                 width: 16%;
                 display: flex;

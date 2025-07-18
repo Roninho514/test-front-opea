@@ -42,4 +42,8 @@
   .main-container {
     margin: 50px;
   }
+
+  button {
+    cursor: pointer;
+  }
 </style>

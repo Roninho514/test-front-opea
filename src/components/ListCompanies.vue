@@ -1,21 +1,21 @@
 <template>
     <div class="list-container">
-        <button class="add-company-container">
+        <button class="add-company-container" @click="$emit('openDialog')">
             <div class="circle-icon-list">
                 <img src="../../public/img/clipboard-list.png" alt="icone de lista">
             </div>
 
             <span>Adicionar Empresa</span>
-        </button>
+        </button>       
 
         <ul class="list-box">
-            <li>
+            <li v-for="data in companiesData.companies" :key="data.id">
                 <div class="circle-icon-list">
                     <img src="../../public/img/clipboard-list.png" alt="icone de lista">
                 </div>
                 <div class="box-information-company">
-                    <span class="name-company">Nome da empresa</span>
-                    <span class="other-information-company">CNPJ: 02.564.000/0001-10  -  Email: empresa@opea.com</span>
+                    <span class="name-company">{{ data.name }}</span>
+                    <span class="other-information-company">CNPJ: {{ data.cnpj }}  -  Email: {{ data.email }}</span>
                 </div>
             </li>
         </ul>
@@ -24,7 +24,9 @@
 
 <script>
     export default {
-        name: "ListCompanies"
+        name: "ListCompanies",
+        props: ["companiesData"],
+        emits: ["openDialog"]
     }
 </script>
 
@@ -38,7 +40,6 @@
             display: flex;
             align-items: center;
             gap: 45%;
-            cursor: pointer;
             height: 3.5rem;
             border-radius: 40px 6px 6px 40px;
             border: 1px solid $second-color;
@@ -84,6 +85,7 @@
                 border-radius: 40px 6px 6px 40px;
                 background-color: $text-title;
                 padding-left: 0.3rem;
+                margin-bottom: 1rem;
 
                 .box-information-company{
                     display: flex;
@@ -100,9 +102,5 @@
             }
         }
 
-    }
-
-    
-
-    
+    }  
 </style>
