@@ -1,8 +1,9 @@
 <template>
   <div class="main-container">
-    <FilterComponent @filterCompany="filterCompany"/>
-    <DialogCreateComponent v-show="showDialog" @closeDialog="closeDialog"/>
-    <ListCompanies  v-show="companiesData.companies" :companiesData="companiesData" @openDialog="openDialog"/>
+    <FilterComponent @filterCompany="getCompanies"/>
+    <DialogCreateComponent v-if="showDialog" @closeDialog="closeDialog" :company="dataEditCompany" @getCompanies="getCompanies" @notificationMessage="notificationMessage"/>
+    <p v-show="message" class="message">{{ message }}</p>
+    <ListCompanies  v-show="companiesData.companies" :companiesData="companiesData" @openDialog="openDialog"  @editCompany="editCompany"/>
   </div>
 </template>
 
@@ -22,17 +23,24 @@ export default {
     return {
       showDialog: false,
       companiesData: [],
+      dataEditCompany : null,
+      message: ""
     }
   },
   methods : {
     closeDialog() {
       this.showDialog = false;
+      if(this.dataEditCompany) {
+        this.dataEditCompany = null;
+      }
     },
     openDialog() {
       this.showDialog = true;
     },
-    async getCompanies(){
-      fetch('https://piysgkm5oc.execute-api.sa-east-1.amazonaws.com/dev/companies')
+    async getCompanies(filter=null){
+      const baseUrl = 'https://piysgkm5oc.execute-api.sa-east-1.amazonaws.com/dev/companies'
+      const url = filter ? baseUrl + `?name=${filter}` : baseUrl;
+      await fetch(url)
       .then(response => {
           if (!response.ok) {
               throw new Error(`Erro na requisição: ${response.status}`);
@@ -48,21 +56,14 @@ export default {
       }) 
                         
     },
-    async filterCompany(filter){
-      fetch(`https://piysgkm5oc.execute-api.sa-east-1.amazonaws.com/dev/companies?name=${filter}`)
-      .then(response => {
-          if (!response.ok) {
-              throw new Error(`Erro na requisição: ${response.status}`);
-          }
-          return response.json();
-      })
-      .then(data => {
-          this.companiesData = data;
-      })
-      .catch (error => {
-          console.error('Falha na requisição:', error.message);
-          alert('Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.');
-      }) 
+    editCompany(data){
+      this.dataEditCompany = data;
+      
+      this.openDialog();
+    },
+    notificationMessage(msg){
+        this.message = msg;
+        setTimeout(() => this.message = "", 3000);
     }
   },
   mounted(){
@@ -70,3 +71,18 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  @use "/src/assets/styles/variables.scss" as *; 
+  .message{
+    height: 41px;
+    width: 100%;
+    background-color: #5FE376;
+    color: $text-title;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    margin: 1rem 0 1rem 0;
+  }
+</style>

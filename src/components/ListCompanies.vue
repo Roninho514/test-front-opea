@@ -9,7 +9,7 @@
         </button>       
 
         <ul class="list-box">
-            <li v-for="data in companiesData.companies" :key="data.id">
+            <li v-for="data in companiesData.companies" :key="data.id" @click="$emit('editCompany',data)">
                 <div class="circle-icon-list">
                     <img src="../../public/img/clipboard-list.png" alt="icone de lista">
                 </div>
@@ -26,20 +26,20 @@
     export default {
         name: "ListCompanies",
         props: ["companiesData"],
-        emits: ["openDialog"]
+        emits: ["editCompany", "openDialog"]
     }
 </script>
 
 <style lang="scss" scoped>
     @use "/src/assets/styles/variables.scss" as *;
     .list-container{
-        margin-top: 1rem;
+        margin: 1rem 0 2rem 0;
 
         .add-company-container {
             width: 100%;
             display: flex;
             align-items: center;
-            gap: 45%;
+            gap: 42%;
             height: 3.5rem;
             border-radius: 40px 6px 6px 40px;
             border: 1px solid $second-color;
@@ -57,7 +57,13 @@
                     border: 1px solid $text-title;
                     transition: 0.3s;
                 }
+
             }
+
+            @media (min-width: 768px) and (max-width: 1024px) {
+                gap: 35%;
+            }
+            
 
             
         }
@@ -81,6 +87,7 @@
                 width: 100%;
                 display: flex;
                 align-items: center;
+                cursor: pointer;
                 height: 3.5rem;
                 border-radius: 40px 6px 6px 40px;
                 background-color: $text-title;

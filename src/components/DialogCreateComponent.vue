@@ -2,15 +2,17 @@
     <div class="dialog-container">
       <div class="dialog-content">
         <div class="header-dialog">
-            <span>Cadastrar Empresa</span>
+            <span>{{ company ? "Editar" : "Cadastrar" }} Empresa</span>
             <button><img src="../../public/img/close.png" alt="Fechar" @click="closeButton"></button>
         </div>
-        <form>
+        <p v-show="message" class="message">{{ message }}</p>
+        <form @submit.prevent="save">
             <div class="form-group">
                 <label for="name">Nome:</label>
                 <input
                 name="name" 
-                type="text"  
+                type="text"
+                v-model="nameInput"  
                 required
                 >
             </div>
@@ -20,6 +22,7 @@
                 <input
                 name="cnpj" 
                 type="text"
+                v-model="cnpjInput"
                 required
                 >
             </div>
@@ -29,19 +32,19 @@
                 <input
                 name="email" 
                 type="email"
+                v-model="emailInput"
                 required
                 >
             </div>
         </form>
 
-        <div class="box-control">
-            <button class="delete-button"><img src="../../public/img/Vector.png" alt="Deletar"></button>
+        <div class="box-control" :class="{ 'new-action': company }">
+            <button class="delete-button" v-show="company" @click="deleteCompany"><img src="../../public/img/Vector.png" alt="Deletar"></button>
             <div class="action-box-button">
-                <button>Cancelar</button>
-                <button class="action-button">Cadastrar</button>
+                <button @click="closeButton">Cancelar</button>
+                <button class="action-button" @click="save" :disabled="!formValidation">{{ company ? "Salvar" : "Cadastrar" }}</button>
             </div>
         </div>
-
       </div>
     </div>
 </template>
@@ -50,11 +53,112 @@
 <script>
     export default {
         name: "DialogCreateComponent",
-        emits: ['closeDialog'],
+        emits: ['closeDialog', 'getCompanies', 'notificationMessage'],
+        props : {
+            company : {
+                type: Object,
+                default: null
+            },
+        },
+        data() {
+            return {
+                nameInput : "",
+                cnpjInput : "",
+                emailInput : "",
+                baseUrl : 'https://piysgkm5oc.execute-api.sa-east-1.amazonaws.com/dev/companies',
+                message: "",
+                validate: false
+            }
+        },
+        mounted() {
+            if(this.company) {
+                this.nameInput = this.company.name;
+                this.cnpjInput = this.company.cnpj;
+                this.emailInput = this.company.email;
+            }
+        },
         methods: {
             closeButton() {
                 this.$emit('closeDialog');
             },
+
+            async save() {
+                this.formValidation()
+                if (this.validate === true) {
+                    const url = this.company ? this.baseUrl + `/${this.company.id}` : this.baseUrl;
+                    const method = this.company ? 'PUT' : 'POST'
+                    await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: this.nameInput,
+                        cnpj: this.cnpjInput,
+                        email: this.emailInput
+                    })})
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            this.message = data.error;
+                            throw new Error(`${data}`);
+                        }
+                        const msg = this.company ? "Atualizado com sucesso!" : "Criado com Sucesso!" 
+                        this.$emit('getCompanies');
+                        this.$emit('notificationMessage', msg);
+                        this.closeButton()
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                }
+            },
+
+            async deleteCompany() {
+                await fetch(this.baseUrl + `/${this.company.id}`, {
+                    method: "DELETE",
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        this.message = data.error;
+                        throw new Error(`${data}`);
+                    }
+                    this.$emit('getCompanies');
+                    const msg = "Deletado com Sucesso!"; 
+                    this.$emit('notificationMessage', msg);
+                    this.closeButton();
+                })
+                .catch(error => {
+                    console.error('Erro ao cadastrar empresa:', error.message);
+                });
+            },
+
+            formValidation() {
+                const nameValid = this.nameInput.trim() !== '';
+                const emailValid = this.emailInput.trim() !== '' && this.emailInput.includes('@');
+                const cnpjNumbers = this.cnpjInput.replace(/\D/g, '');
+                const cnpjValid = cnpjNumbers.length === 14;
+
+                if(!cnpjValid) {
+                    this.message = "CNPJ inválido. Verifique se o campo está preenchido corretamente com os 14 números obrigatórios."
+                }
+
+                if(!nameValid) {
+                    this.message = "Nome inválido. O campo não pode estar vazio."
+                }
+
+                if(!emailValid) {
+                    this.message = "E-mail inválido. Verifique se o campo está preenchido corretamente com um endereço de e-mail válido (ex: exemplo@dominio.com)."
+                }
+
+                if (nameValid && emailValid && cnpjValid) {
+                    return this.validate = true;
+                } else {
+                    return this.validate = false;
+                }
+            } 
         },
     }
 </script>
@@ -81,6 +185,16 @@
                 width: 100%;
                 display: flex;
                 flex-direction: column;
+
+                .message{
+                    height: auto;
+                    width: 100%;
+                    background-color: rgba(255, 0, 0, 0.6156862745);
+                    display: flex;
+                    align-items: center;
+                    padding: 30px;
+                    color: $text-title;
+                }
 
                 .header-dialog{
                     display: flex;
@@ -150,11 +264,14 @@
                 .box-control {
                     display: flex;
                     align-items: center;
-                    justify-content: space-between;
+                    justify-content: flex-end;
                     width: 100%;
                     height: 5rem;
                     padding: 2rem;
                     gap: 2rem;
+                    &.new-action {
+                        justify-content: space-between;
+                    }
 
                     .delete-button {
                         width: 35px;
