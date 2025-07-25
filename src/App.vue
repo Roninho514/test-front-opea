@@ -30,6 +30,10 @@
     font-family: "Jost", sans-serif;
   }
 
+  body {
+    height: 100vh;
+  }
+
   #app {
     height: 100%;
     background-color: $primary-color;
