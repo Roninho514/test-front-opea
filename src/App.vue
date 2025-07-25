@@ -30,8 +30,9 @@
     font-family: "Jost", sans-serif;
   }
 
-  body {
-    height: 100vh;
+  html, body, #app {
+    height: 100%;  
+    overflow: auto;
   }
 
   #app {
